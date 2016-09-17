@@ -1,5 +1,11 @@
 package mock
 
+import (
+	"net/http"
+
+	"github.com/gin-gonic/gin"
+)
+
 /* MockData */
 type Product struct {
 	ID          int
@@ -16,4 +22,30 @@ var products = []Product{
 	Product{ID: 4, Name: "Cars VR", Slug: "cars-vr", Description: "Get behind the wheel of the fastest cars in the world."},
 	Product{ID: 5, Name: "Robin Hood", Slug: "robin-hood", Description: "Pick up the bow and arrow and master the art of archery"},
 	Product{ID: 6, Name: "Real World VR", Slug: "real-world-vr", Description: "Explore the seven wonders of the world in VR"},
+}
+
+// MockHandler shows a list of dummy products
+func MockHandler(c *gin.Context) {
+	var product Product
+	slug := c.Param("slug")
+
+	for _, p := range products {
+		if p.Slug == slug {
+			product = p
+		}
+	}
+
+	if product.Slug != "" {
+		content := gin.H{"content": product}
+		c.JSON(http.StatusOK, content)
+	} else {
+		content := gin.H{"content": "Product Not Found"}
+		c.JSON(http.StatusOK, content)
+	}
+}
+
+func MockProductHandler(c *gin.Context) {
+	// Here we are converting the slice of products to json
+	content := gin.H{"content": products}
+	c.JSON(http.StatusOK, content)
 }
