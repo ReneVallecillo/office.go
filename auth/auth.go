@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"database/sql"
 	"net/http"
 
 	"github.com/ReneVallecillo/office/model"
@@ -11,15 +12,14 @@ import (
 
 // LoginUser is a tmp struct that hold minimal data to auth user
 type LoginUser struct {
-	ID       int    `db:"user_id"`
-	Password string `db:"password"`
-	email    string
+	ID       int            `db:"user_id"`
+	Password sql.NullString `db:"password"`
 }
 
 //Login asks for user/pass and validates
 //TODO: Add jwt logic
 func Login(c *gin.Context) {
-	query := "SELECT 'user_id', 'password' FROM user WHERE 'email' = $1"
+	query := `SELECT "user_id", "password" FROM "user" WHERE "email" = $1`
 	db := c.MustGet("DB").(*sqlx.DB)
 
 	email := c.PostForm("email")
@@ -33,7 +33,7 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if CompareHash(pass, loginUser.Password) {
+	if CompareHash(pass, loginUser.Password.String) {
 		user := model.User{}
 		user, err := user.UserFindByID(db, loginUser.ID)
 		if err != nil {
@@ -44,7 +44,7 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, user)
 
 	} else {
-		err = errors.Wrap(err, "Pass mismatch")
+		err = errors.New("Pass mismatch")
 		c.JSON(http.StatusOK, err.Error())
 		return
 	}
