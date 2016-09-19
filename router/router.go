@@ -1,10 +1,10 @@
 package router
 
 import (
-	"github.com/ReneVallecillo/office/auth"
-	database "github.com/ReneVallecillo/office/db"
-	"github.com/ReneVallecillo/office/handlers"
-	"github.com/ReneVallecillo/office/mock"
+	"github.com/ReneVallecillo/office.go/auth"
+	database "github.com/ReneVallecillo/office.go/db"
+	"github.com/ReneVallecillo/office.go/handlers"
+	"github.com/ReneVallecillo/office.go/mock"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 )

@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"net/http"
 
-	"github.com/ReneVallecillo/office/model"
+	"github.com/ReneVallecillo/office.go/model"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
 	"github.com/pkg/errors"

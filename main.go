@@ -1,8 +1,8 @@
 package main
 
 import (
-	database "github.com/ReneVallecillo/office/db"
-	"github.com/ReneVallecillo/office/router"
+	database "github.com/ReneVallecillo/office.go/db"
+	"github.com/ReneVallecillo/office.go/router"
 )
 
 func main() {
