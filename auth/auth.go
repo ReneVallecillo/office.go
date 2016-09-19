@@ -1,12 +1,52 @@
 package auth
 
-import "github.com/gin-gonic/gin"
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/ReneVallecillo/office/model"
+	"github.com/gin-gonic/gin"
+	"github.com/jmoiron/sqlx"
+	"github.com/pkg/errors"
+)
+
+// LoginUser is a tmp struct that hold minimal data to auth user
+type LoginUser struct {
+	ID       int    `db:"user_id"`
+	Password string `db:"password"`
+	email    string
+}
 
 //Login asks for user/pass and validates
-//TODO: real thing
+//TODO: Add jwt logic
 func Login(c *gin.Context) {
-	content := gin.H{"Hello": "World"}
-	c.JSON(http.StatusOK, content)
+	query := "SELECT 'user_id', 'password' FROM user WHERE 'email' = $1"
+	db := c.MustGet("DB").(*sqlx.DB)
+
+	email := c.PostForm("email")
+	pass := c.PostForm("pass")
+
+	loginUser := LoginUser{}
+	err := db.Get(&loginUser, query, email)
+	if err != nil {
+		err = errors.Wrap(err, "couldn't find user")
+		c.JSON(http.StatusOK, err.Error())
+		return
+	}
+
+	if CompareHash(pass, loginUser.Password) {
+		user := model.User{}
+		user, err := user.UserFindByID(db, loginUser.ID)
+		if err != nil {
+			err = errors.Wrap(err, "DB error")
+			c.JSON(http.StatusOK, err.Error())
+			return
+		}
+		c.JSON(http.StatusOK, user)
+
+	} else {
+		err = errors.Wrap(err, "Pass mismatch")
+		c.JSON(http.StatusOK, err.Error())
+		return
+	}
 
 }
