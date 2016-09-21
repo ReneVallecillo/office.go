@@ -19,11 +19,11 @@ type LoginUser struct {
 //Login asks for user/pass and validates
 //TODO: Add jwt logic
 func Login(c *gin.Context) {
-	query := `SELECT "user_id", "password" FROM "user" WHERE "email" = $1`
+	query := `SELECT user_id, password FROM "user" WHERE "email" = $1`
 	db := c.MustGet("DB").(*sqlx.DB)
 
 	email := c.PostForm("email")
-	pass := c.PostForm("pass")
+	pass := c.PostForm("password")
 
 	loginUser := LoginUser{}
 	err := db.Get(&loginUser, query, email)
@@ -48,5 +48,9 @@ func Login(c *gin.Context) {
 		c.JSON(http.StatusOK, err.Error())
 		return
 	}
+
+}
+
+func SetSession(c *gin.Context, name string, token string) {
 
 }

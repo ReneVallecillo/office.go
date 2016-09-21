@@ -30,5 +30,4 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 	}
 
 	return router
-
 }
