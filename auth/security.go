@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"time"
 
-	"bitbucket.org/reneval/lawparser/models"
-
+	"github.com/ReneVallecillo/office.go/model"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -52,7 +52,7 @@ func CompareHash(reqPass, dbPass string) bool {
 }
 
 // GenerateToken generates a jwt token
-func GenerateToken(user *models.User) string {
+func GenerateToken(user model.User) string {
 	// Expires the token and cookie in 1 hour
 	expireToken := time.Now().Add(time.Hour * 24).Unix()
 	//expireCookie := time.Now().Add(time.Hour * 1)
@@ -76,10 +76,39 @@ func GenerateToken(user *models.User) string {
 	return signedToken
 }
 
-// Middleware to protect /profile and /logout
-func validate(protectedPage http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(res http.ResponseWriter, req *http.Request) {
-		//Validate the token and if it passes call the protected handler below.
-		protectedPage(res, req)
-	})
+// TokenAuthMiddleware exists to protect /profile and /logout
+func TokenAuthMiddleware(c *gin.Context) {
+	cookie, err := c.GetCookie("Auth")
+	if err != nil {
+		c.JSON(http.StatusNotFound, "Not found")
+		return
+	}
+
+	//Return token
+	token, err := jwt.ParseWithClaims(
+		cookie,
+		&Claims{},
+		func(token *jwt.Token) (interface{}, error) {
+
+			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, fmt.Errorf("Unexpected signing method")
+			}
+			return []byte("secret"), nil
+
+		})
+
+	if err != nil {
+		c.JSON(http.StatusNotFound, "No valid auth")
+		return
+	}
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		c.Set("claim", *claims)
+		// ctx := context.WithValue(req.Context(), MyKey, *claims)
+		c.Next()
+	} else {
+		c.JSON(http.StatusNotFound, "Invalid Token")
+		return
+	}
+
 }

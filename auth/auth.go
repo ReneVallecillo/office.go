@@ -41,6 +41,10 @@ func Login(c *gin.Context) {
 			c.JSON(http.StatusOK, err.Error())
 			return
 		}
+
+		//Set token
+		token := GenerateToken(user)
+		SetSession(c, "Auth", token)
 		c.JSON(http.StatusOK, user)
 
 	} else {
@@ -53,4 +57,12 @@ func Login(c *gin.Context) {
 
 func SetSession(c *gin.Context, name string, token string) {
 
+	c.SetCookie(
+		name,
+		token,
+		1,
+		"/",
+		"localhost",
+		true,
+		true)
 }
