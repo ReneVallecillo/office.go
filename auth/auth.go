@@ -56,13 +56,24 @@ func Login(c *gin.Context) {
 }
 
 func SetSession(c *gin.Context, name string, token string) {
-
 	c.SetCookie(
 		name,
 		token,
-		1,
+		1000,
+		"/",
+		"",
+		true,
+		true)
+}
+
+func Logout(c *gin.Context) {
+	c.SetCookie(
+		"Auth",
+		"none",
+		-1,
 		"/",
 		"localhost",
 		true,
-		true)
+		true,
+	)
 }

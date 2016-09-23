@@ -77,38 +77,47 @@ func GenerateToken(user model.User) string {
 }
 
 // TokenAuthMiddleware exists to protect /profile and /logout
-func TokenAuthMiddleware(c *gin.Context) {
-	cookie, err := c.GetCookie("Auth")
-	if err != nil {
-		c.JSON(http.StatusNotFound, "Not found")
-		return
-	}
+func TokenAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		cookie, err := c.Cookie("Auth")
+		if err != nil {
+			fmt.Println(err)
+			RespondWithError(http.StatusUnauthorized, "Token Required", c)
+			return
+		}
 
-	//Return token
-	token, err := jwt.ParseWithClaims(
-		cookie,
-		&Claims{},
-		func(token *jwt.Token) (interface{}, error) {
+		//Return token
+		token, err := jwt.ParseWithClaims(
+			cookie,
+			&Claims{},
+			func(token *jwt.Token) (interface{}, error) {
 
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("Unexpected signing method")
-			}
-			return []byte("secret"), nil
+				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+					return nil, fmt.Errorf("Unexpected signing method")
+				}
+				return []byte("secret"), nil
+			})
 
-		})
+		if err != nil {
+			RespondWithError(http.StatusInternalServerError, "Problem with signing method", c)
+			return
+		}
 
-	if err != nil {
-		c.JSON(http.StatusNotFound, "No valid auth")
-		return
-	}
+		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+			c.Set("claim", *claims)
+		} else {
+			c.JSON(http.StatusUnauthorized, "Invalid Token")
+			return
+		}
 
-	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-		c.Set("claim", *claims)
-		// ctx := context.WithValue(req.Context(), MyKey, *claims)
 		c.Next()
-	} else {
-		c.JSON(http.StatusNotFound, "Invalid Token")
-		return
 	}
+}
 
+// RespondWithError ends up the request chain.
+func RespondWithError(code int, message string, c *gin.Context) {
+	resp := map[string]string{"error": message}
+
+	c.JSON(code, resp)
+	c.Abort()
 }
