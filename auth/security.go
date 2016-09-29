@@ -99,7 +99,9 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 			})
 
 		if err != nil {
-			RespondWithError(http.StatusInternalServerError, "Problem with signing method", c)
+			detail := errors.Wrap(err, "Token Invalid")
+			fmt.Printf("%v", detail)
+			RespondWithError(http.StatusUnauthorized, "Token Invalid", c)
 			return
 		}
 
