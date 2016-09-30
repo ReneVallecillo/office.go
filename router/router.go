@@ -1,17 +1,31 @@
 package router
 
 import (
+	"time"
+
 	"github.com/ReneVallecillo/office.go/auth"
 	database "github.com/ReneVallecillo/office.go/db"
 	"github.com/ReneVallecillo/office.go/handlers"
 	"github.com/ReneVallecillo/office.go/mock"
 	"github.com/gin-gonic/gin"
+	"github.com/itsjamie/gin-cors"
 	"github.com/jmoiron/sqlx"
 )
 
 // InitRouter initializes the router
 func InitRouter(db *sqlx.DB) *gin.Engine {
 	router := gin.Default()
+
+	router.Use(cors.Middleware(cors.Config{
+		Origins:         "*",
+		Methods:         "GET, PUT, POST, DELETE",
+		RequestHeaders:  "Origin, Authorization, Content-Type",
+		ExposedHeaders:  "",
+		MaxAge:          50 * time.Second,
+		Credentials:     true,
+		ValidateHeaders: false,
+	}))
+
 	router.Use(database.Database(db))
 
 	v1 := router.Group("/api/v1")
