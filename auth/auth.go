@@ -2,6 +2,7 @@ package auth
 
 import (
 	"database/sql"
+	"fmt"
 	"net/http"
 
 	"github.com/ReneVallecillo/office.go/model"
@@ -16,24 +17,36 @@ type LoginUser struct {
 	Password sql.NullString `db:"password"`
 }
 
+type LoginRequest struct {
+	Email    string `form:"username" json:"username" binding:"required"`
+	Password string `form:"password" json:"password" binding:"required"`
+}
+
 //Login asks for user/pass and validates
 //TODO: Add jwt logic
 func Login(c *gin.Context) {
 	query := `SELECT user_id, password FROM "user" WHERE "email" = $1`
 	db := c.MustGet("DB").(*sqlx.DB)
+	var login LoginRequest
+	err := c.BindJSON(&login)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
 
-	email := c.PostForm("email")
-	pass := c.PostForm("password")
+	// email := c.PostForm("email")
+	// pass := c.PostForm("password")
+	// fmt.Println("pass:", pass)
 
 	loginUser := LoginUser{}
-	err := db.Get(&loginUser, query, email)
+	err = db.Get(&loginUser, query, login.Email)
 	if err != nil {
 		err = errors.Wrap(err, "couldn't find user")
 		c.JSON(http.StatusOK, err.Error())
 		return
 	}
 
-	if CompareHash(pass, loginUser.Password.String) {
+	if CompareHash(login.Password, loginUser.Password.String) {
 		user := model.User{}
 		user, err := user.UserFindByID(db, loginUser.ID)
 		if err != nil {
@@ -44,6 +57,7 @@ func Login(c *gin.Context) {
 
 		//Set token
 		token := GenerateToken(user)
+		user.Token = token
 		SetSession(c, "Auth", token)
 		c.JSON(http.StatusOK, user)
 

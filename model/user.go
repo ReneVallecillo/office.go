@@ -16,6 +16,7 @@ type User struct {
 	Password  string `db:"password" json:"password"`
 	StatusID  uint8  `db:"status_id" json:"status_id"`
 	Control
+	Token string `json:"token"`
 }
 
 // UserFindByID returns one User given the ID
