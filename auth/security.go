@@ -3,11 +3,11 @@ package auth
 import (
 	"encoding/base64"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/ReneVallecillo/office.go/model"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/dgrijalva/jwt-go/request"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
@@ -79,16 +79,9 @@ func GenerateToken(user model.User) string {
 // TokenAuthMiddleware exists to protect /profile and /logout
 func TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		cookie, err := c.Cookie("Auth")
-		if err != nil {
-			fmt.Println(err)
-			RespondWithError(http.StatusUnauthorized, "Token Required", c)
-			return
-		}
-
-		//Return token
-		token, err := jwt.ParseWithClaims(
-			cookie,
+		token, err := request.ParseFromRequestWithClaims(
+			c.Request,
+			request.AuthorizationHeaderExtractor,
 			&Claims{},
 			func(token *jwt.Token) (interface{}, error) {
 
@@ -101,17 +94,17 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 		if err != nil {
 			detail := errors.Wrap(err, "Token Invalid")
 			fmt.Printf("%v", detail)
-			RespondWithError(http.StatusUnauthorized, "Token Invalid", c)
-			return
+			c.JSON(401, gin.H{"message": "Token Required", "status": 401})
+			c.Abort()
 		}
 
 		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
 			c.Set("claim", *claims)
 		} else {
-			c.JSON(http.StatusUnauthorized, "Invalid Token")
-			return
+			c.JSON(401, gin.H{"message": "Token Required", "status": 401})
+			c.Abort()
 		}
-
+		fmt.Println("LLego aca")
 		c.Next()
 	}
 }

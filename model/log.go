@@ -1,10 +1,10 @@
 package model
 
-import "time"
+import "github.com/lib/pq"
 
 // Control struct has the common time control members of main structs
 type Control struct {
-	CreatedAt time.Time `db:"created_at" json:"created_at"`
-	UpdatedAt time.Time `db:"updated_at" json:"updated_at"`
-	Deleted   bool      `db:"deleted" json:"deleted"`
+	CreatedAt pq.NullTime `db:"created_at" json:"created_at"`
+	UpdatedAt pq.NullTime `db:"updated_at" json:"updated_at"`
+	DeletedAt pq.NullTime `db:"deleted_at" json:"deleted_at"`
 }

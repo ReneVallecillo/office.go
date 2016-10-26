@@ -46,6 +46,7 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 	authorized := router.Group("/", auth.TokenAuthMiddleware())
 	{
 		authorized.GET("/profile", mock.MockProductHandler)
+		authorized.GET("/api/v1/users", handlers.UserListHandler)
 	}
 
 	return router
