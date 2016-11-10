@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/ReneVallecillo/office.go/auth"
-	database "github.com/ReneVallecillo/office.go/db"
 	"github.com/ReneVallecillo/office.go/handlers"
 	"github.com/ReneVallecillo/office.go/mock"
 	"github.com/gin-gonic/gin"
@@ -26,12 +25,16 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 		ValidateHeaders: false,
 	}))
 
-	router.Use(database.Database(db))
+	//TODO: check use of middleware after DDD
+	//router.Use(postgres.Database(db))
+	authService := &auth.AuthService{}
+	context := &AuthContext{AuthService: authService}
 
 	v1 := router.Group("/api/v1")
 	{
 		//Routes
 		v1.POST("/login", auth.Login)
+		v1.POST("/login2", context.AuthHandler)
 		v1.GET("/", handlers.NotImplemented)
 		v1.GET("/ping", Ping)
 	}

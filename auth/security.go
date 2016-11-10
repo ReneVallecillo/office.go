@@ -76,6 +76,31 @@ func GenerateToken(user model.User) string {
 	return signedToken
 }
 
+// GenerateToken2 generates a jwt token
+func GenerateToken2(user User) string {
+	// Expires the token and cookie in 1 hour
+	expireToken := time.Now().Add(time.Hour * 24).Unix()
+	//expireCookie := time.Now().Add(time.Hour * 1)
+
+	// We'll manually assign the claims but in production you'd insert values from a database
+	claims := Claims{
+		user.Customer.Email,
+		jwt.StandardClaims{
+			ExpiresAt: expireToken,
+			Issuer:    "localhost:9000", //TODO: use real info
+		},
+	}
+
+	// Create the token using your claims
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	// Signs the token with a secret.
+	//TODO: USE ENV for secret
+	signedToken, _ := token.SignedString([]byte("secret"))
+
+	return signedToken
+}
+
 // TokenAuthMiddleware exists to protect /profile and /logout
 func TokenAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
