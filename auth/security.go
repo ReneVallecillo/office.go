@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/ReneVallecillo/office.go/domain"
 	"github.com/ReneVallecillo/office.go/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
@@ -77,7 +78,7 @@ func GenerateToken(user model.User) string {
 }
 
 // GenerateToken2 generates a jwt token
-func GenerateToken2(user User) string {
+func GenerateToken2(user domain.User) string {
 	// Expires the token and cookie in 1 hour
 	expireToken := time.Now().Add(time.Hour * 24).Unix()
 	//expireCookie := time.Now().Add(time.Hour * 1)

@@ -4,9 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/ReneVallecillo/office.go/auth"
+	"github.com/ReneVallecillo/office.go/domain"
 	"github.com/gin-gonic/gin"
-	"github.com/pkg/errors"
 )
 
 //LoginRequest used to map request via gin
@@ -17,7 +16,7 @@ type LoginRequest struct {
 
 //AuthService used to decouple code
 type AuthService interface {
-	Login2(email, pass string) (*auth.User, error)
+	Login2(email, pass string) (*domain.User, error)
 }
 
 //AuthContext gives access to the interface to be used
@@ -37,7 +36,7 @@ func (context *AuthContext) AuthHandler(c *gin.Context) {
 	fmt.Println("before login")
 	user, err := context.AuthService.Login2(login.Email, login.Password)
 	if err != nil {
-		err = errors.Wrap(err, "couldn't find user")
+		//err = errors.Wrap(err, "couldn't find user")
 		c.JSON(http.StatusOK, err.Error())
 		return
 	}

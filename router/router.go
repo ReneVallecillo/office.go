@@ -6,6 +6,7 @@ import (
 	"github.com/ReneVallecillo/office.go/auth"
 	"github.com/ReneVallecillo/office.go/handlers"
 	"github.com/ReneVallecillo/office.go/mock"
+	"github.com/ReneVallecillo/office.go/postgres"
 	"github.com/gin-gonic/gin"
 	"github.com/itsjamie/gin-cors"
 	"github.com/jmoiron/sqlx"
@@ -27,7 +28,10 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 
 	//TODO: check use of middleware after DDD
 	//router.Use(postgres.Database(db))
-	authService := &auth.AuthService{}
+	//Injects
+
+	dbService := &postgres.UserService{DB: db}
+	authService := &auth.AuthService{UserRepository: dbService}
 	context := &AuthContext{AuthService: authService}
 
 	v1 := router.Group("/api/v1")
