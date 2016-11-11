@@ -6,12 +6,11 @@ import (
 	"time"
 
 	"github.com/ReneVallecillo/office.go/domain"
-	"github.com/ReneVallecillo/office.go/model"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/dgrijalva/jwt-go/request"
-	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"golang.org/x/crypto/bcrypt"
+	"net/http"
 )
 
 type Claims struct {
@@ -42,8 +41,6 @@ func CompareHash(reqPass, dbPass string) bool {
 	//Decode
 	hashBytes, err := base64.StdEncoding.DecodeString(dbPass)
 	if err != nil {
-		err := errors.Wrap(err, "Invalid base64 string")
-		fmt.Println(err)
 		return false
 	}
 
@@ -53,32 +50,7 @@ func CompareHash(reqPass, dbPass string) bool {
 }
 
 // GenerateToken generates a jwt token
-func GenerateToken(user model.User) string {
-	// Expires the token and cookie in 1 hour
-	expireToken := time.Now().Add(time.Hour * 24).Unix()
-	//expireCookie := time.Now().Add(time.Hour * 1)
-
-	// We'll manually assign the claims but in production you'd insert values from a database
-	claims := Claims{
-		user.Email,
-		jwt.StandardClaims{
-			ExpiresAt: expireToken,
-			Issuer:    "localhost:9000", //TODO: use real info
-		},
-	}
-
-	// Create the token using your claims
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	// Signs the token with a secret.
-	//TODO: USE ENV for secret
-	signedToken, _ := token.SignedString([]byte("secret"))
-
-	return signedToken
-}
-
-// GenerateToken2 generates a jwt token
-func GenerateToken2(user domain.User) string {
+func GenerateToken(user domain.User) string {
 	// Expires the token and cookie in 1 hour
 	expireToken := time.Now().Add(time.Hour * 24).Unix()
 	//expireCookie := time.Now().Add(time.Hour * 1)
@@ -102,11 +74,11 @@ func GenerateToken2(user domain.User) string {
 	return signedToken
 }
 
-// TokenAuthMiddleware exists to protect /profile and /logout
-func TokenAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token, err := request.ParseFromRequestWithClaims(
-			c.Request,
+//JWTAuthorize checks if token in header is valid
+func (auth *AuthService)JWTAuthorize(r *http.Request) (
+	interface { Valid() error }, error) {
+	token, err := request.ParseFromRequestWithClaims(
+			r,
 			request.AuthorizationHeaderExtractor,
 			&Claims{},
 			func(token *jwt.Token) (interface{}, error) {
@@ -114,31 +86,20 @@ func TokenAuthMiddleware() gin.HandlerFunc {
 				if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 					return nil, fmt.Errorf("Unexpected signing method")
 				}
+				//TODO: See why is this secret
 				return []byte("secret"), nil
 			})
 
 		if err != nil {
-			detail := errors.Wrap(err, "Token Invalid")
-			fmt.Printf("%v", detail)
-			c.JSON(401, gin.H{"message": "Token Required", "status": 401})
-			c.Abort()
+			err := errors.Wrap(err, "Token Invalid")
+			return nil, err
 		}
 
 		if claims, ok := token.Claims.(*Claims); ok && token.Valid {
-			c.Set("claim", *claims)
-		} else {
-			c.JSON(401, gin.H{"message": "Token Required", "status": 401})
-			c.Abort()
+			return claims, nil
+			
 		}
-		fmt.Println("LLego aca")
-		c.Next()
-	}
+
+		return nil, err
 }
 
-// RespondWithError ends up the request chain.
-func RespondWithError(code int, message string, c *gin.Context) {
-	resp := map[string]string{"error": message}
-
-	c.JSON(code, resp)
-	c.Abort()
-}

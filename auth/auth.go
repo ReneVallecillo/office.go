@@ -1,93 +1,42 @@
 package auth
 
 import (
-	"database/sql"
-	"fmt"
-	"net/http"
+	"errors"
 
-	"github.com/ReneVallecillo/office.go/model"
-	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
-	"github.com/pkg/errors"
+	"github.com/ReneVallecillo/office.go/domain"
+
+	"fmt"
 )
 
-// LoginUser is a tmp struct that hold minimal data to auth user
-type LoginUser struct {
-	ID       int            `db:"user_id"`
-	Password sql.NullString `db:"password"`
+//AuthService helps with dependency injection and decoupling
+type AuthService struct {
+	UserRepository domain.UserRepository
 }
 
-type LoginRequest struct {
-	Email    string `form:"username" json:"username" binding:"required"`
-	Password string `form:"password" json:"password" binding:"required"`
-}
+// type Authorizer interface{
+// 	Authorize(r *http.Request)error
+// }
 
-//Login asks for user/pass and validates
-//TODO: Add jwt logic
-func Login(c *gin.Context) {
-	query := `SELECT user_id, password FROM "user" WHERE "email" = $1`
-	db := c.MustGet("DB").(*sqlx.DB)
-	var login LoginRequest
-	err := c.BindJSON(&login)
+//Login logs the user
+func (auth *AuthService) Login(email, pass string) (*domain.User, error) {
+	fmt.Println("login method reached")
+	var authUser *domain.User
+	user, err := auth.UserRepository.FindByEmail(email)
 	if err != nil {
-		fmt.Println(err)
-		return
+		return nil, err
 	}
 
-	// email := c.PostForm("email")
-	// pass := c.PostForm("password")
-	// fmt.Println("pass:", pass)
-
-	loginUser := LoginUser{}
-	err = db.Get(&loginUser, query, login.Email)
-	if err != nil {
-		err = errors.Wrap(err, "couldn't find user")
-		c.JSON(http.StatusOK, err.Error())
-		return
-	}
-
-	if CompareHash(login.Password, loginUser.Password.String) {
-		user := model.User{}
-		user, err := user.UserFindByID(db, loginUser.ID)
+	if CompareHash(pass, user.Password) {
+		authUser, err = auth.UserRepository.FindByID(user.ID)
 		if err != nil {
-			err = errors.Wrap(err, "DB error")
-			c.JSON(http.StatusOK, err.Error())
-			return
+			return nil, err
 		}
-
-		//Set token
-		token := GenerateToken(user)
-		user.Token = token
-		SetSession(c, "Auth", token)
-		c.JSON(http.StatusOK, user)
-
+		authUser.Token = GenerateToken(*authUser)
 	} else {
-		err = errors.New("Pass mismatch")
-		c.JSON(http.StatusOK, err.Error())
-		return
+		err = errors.New("hash not equal")
+		return nil, err
 	}
 
-}
+	return authUser, nil
 
-func SetSession(c *gin.Context, name string, token string) {
-	c.SetCookie(
-		name,
-		token,
-		1000,
-		"/",
-		"",
-		true,
-		true)
-}
-
-func Logout(c *gin.Context) {
-	c.SetCookie(
-		"Auth",
-		"none",
-		-1,
-		"/",
-		"localhost",
-		true,
-		true,
-	)
 }

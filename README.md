@@ -31,5 +31,5 @@ Old cookies are working, check how to deal with old tokens or expired ones
 
 ```
 curl -H "Content-Type: application/json" -X POST \
--d '{"username":"email@test.com","password":"test123"}' http://localhost:8080/api/v1/login2
+-d '{"username":"email@test.com","password":"test123"}' http://localhost:8080/api/v1/login
 ```

@@ -3,7 +3,7 @@ package router
 import (
 	"time"
 
-	"github.com/ReneVallecillo/office.go/auth"
+	"github.com/ReneVallecillo/office.go/auth" //remove dependecy
 	"github.com/ReneVallecillo/office.go/handlers"
 	"github.com/ReneVallecillo/office.go/mock"
 	"github.com/ReneVallecillo/office.go/postgres"
@@ -32,13 +32,13 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 
 	dbService := &postgres.UserService{DB: db}
 	authService := &auth.AuthService{UserRepository: dbService}
-	context := &AuthContext{AuthService: authService}
+	context := &AuthContext{AuthService: authService,Authorizer: authService}
+	
 
 	v1 := router.Group("/api/v1")
 	{
 		//Routes
-		v1.POST("/login", auth.Login)
-		v1.POST("/login2", context.AuthHandler)
+		v1.POST("/login", context.AuthHandler)
 		v1.GET("/", handlers.NotImplemented)
 		v1.GET("/ping", Ping)
 	}
@@ -50,7 +50,7 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 		test.GET("/products", mock.MockProductHandler)
 	}
 
-	authorized := router.Group("/", auth.TokenAuthMiddleware())
+	authorized := router.Group("/", context.TokenAuthMiddleware())
 	{
 		authorized.GET("/profile", mock.MockProductHandler)
 		authorized.GET("/api/v1/users", handlers.UserListHandler)

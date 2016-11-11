@@ -16,27 +16,25 @@ type LoginRequest struct {
 
 //AuthService used to decouple code
 type AuthService interface {
-	Login2(email, pass string) (*domain.User, error)
+	Login(email, pass string) (*domain.User, error)
 }
 
 //AuthContext gives access to the interface to be used
 type AuthContext struct {
 	AuthService AuthService
+	Authorizer Authorizer
 }
 
 //AuthHandler deals with the Auth Request
 func (context *AuthContext) AuthHandler(c *gin.Context) {
-	fmt.Println("Handler Reached")
 	var login LoginRequest
 	err := c.BindJSON(&login)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
-	fmt.Println("before login")
-	user, err := context.AuthService.Login2(login.Email, login.Password)
+	user, err := context.AuthService.Login(login.Email, login.Password)
 	if err != nil {
-		//err = errors.Wrap(err, "couldn't find user")
 		c.JSON(http.StatusOK, err.Error())
 		return
 	}
