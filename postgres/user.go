@@ -12,6 +12,7 @@ type UserService struct {
 	DB *sqlx.DB
 }
 
+//FindByID return one user with the query ID
 func (db *UserService) FindByID(id uint32) (*domain.User, error) {
 	var user = domain.User{}
 
@@ -38,5 +39,20 @@ func (db *UserService) FindByEmail(email string) (*domain.User, error) {
 	}
 
 	return &user, nil
+
+}
+
+//FindAll returns all users in DB.
+func (db *UserService) FindAll() ([]*domain.User, error) {
+	fmt.Println("llego a postgres")
+	var users []*domain.User
+	query := `SELECT * FROM "user"`
+	err := db.DB.Select(&users, query)
+	if err != nil {
+		err = errors.Wrap(err, "couldn't find any user")
+		return nil, err
+	}
+
+	return users, nil
 
 }

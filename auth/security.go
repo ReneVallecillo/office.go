@@ -76,7 +76,7 @@ func GenerateToken(user domain.User) string {
 
 //JWTAuthorize checks if token in header is valid
 func (auth *AuthService)JWTAuthorize(r *http.Request) (
-	interface { Valid() error }, error) {
+	interface{ Valid() error }, error) {
 	token, err := request.ParseFromRequestWithClaims(
 			r,
 			request.AuthorizationHeaderExtractor,

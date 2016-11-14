@@ -3,6 +3,8 @@ package main
 import (
 	database "github.com/ReneVallecillo/office.go/postgres"
 	"github.com/ReneVallecillo/office.go/router"
+
+	_ "github.com/lib/pq"
 )
 
 func main() {

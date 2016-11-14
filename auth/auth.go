@@ -13,10 +13,6 @@ type AuthService struct {
 	UserRepository domain.UserRepository
 }
 
-// type Authorizer interface{
-// 	Authorize(r *http.Request)error
-// }
-
 //Login logs the user
 func (auth *AuthService) Login(email, pass string) (*domain.User, error) {
 	fmt.Println("login method reached")

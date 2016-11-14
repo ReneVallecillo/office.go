@@ -32,8 +32,7 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 
 	dbService := &postgres.UserService{DB: db}
 	authService := &auth.AuthService{UserRepository: dbService}
-	context := &AuthContext{AuthService: authService,Authorizer: authService}
-	
+	context := &AuthContext{AuthService: authService, Authorizer: authService}
 
 	v1 := router.Group("/api/v1")
 	{
@@ -53,7 +52,7 @@ func InitRouter(db *sqlx.DB) *gin.Engine {
 	authorized := router.Group("/", context.TokenAuthMiddleware())
 	{
 		authorized.GET("/profile", mock.MockProductHandler)
-		authorized.GET("/api/v1/users", handlers.UserListHandler)
+		// authorized.GET("/api/v1/users", handlers.UserListHandler)
 	}
 
 	return router

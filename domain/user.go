@@ -23,4 +23,5 @@ type UserRepository interface {
 	//Save(user User)
 	FindByID(id uint32) (*User, error)
 	FindByEmail(email string) (*User, error)
+	FindAll() ([]*User, error)
 }
